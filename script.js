@@ -24,15 +24,24 @@ function getDownloadAllBtn() {
 
 window.getDownloadAllBtn = getDownloadAllBtn;
 
-function initDownloadAll() {
-    getDownloadAllBtn().click();
+async function initDownloadAll() {
+    let btn = getDownloadAllBtn();
+
+    if (btn) {
+        btn.click();
+    } else {
+        alert('Please refresh the page and try again!');
+    }
+
+    await wait(1);
 }
 
 window.initDownloadAll = initDownloadAll;
 
-function wait(timeInSecond) {
+function wait(timeInSecond, msg = '') {
     return new Promise((res, rej) => {
         let timeout = setTimeout(() => {
+            console.log(`Waited for ${timeInSecond} seconds ${msg}`);
             res();
             clearTimeout(timeout);
         }, timeInSecond * 1000);
@@ -40,26 +49,6 @@ function wait(timeInSecond) {
 }
 
 window.wait = wait;
-
-async function startDownload(it = 2) {
-    let genBtn = getGenerateButton();
-    
-    if (!genBtn) {
-        alert('Please refresh the page and try again!');
-    }
-
-    while (it > 0) {
-        genBtn.click();
-        // await wait(30);
-        observeAndDownload();
-        await wait(2);
-        it--;
-    }
-}
-
-window.startDownload = startDownload;
-
-// startDownload(2).then(console.log).catch(console.error);
 
 function getFirstGenImgSrc() {
     let all = document.querySelectorAll('img[src^="https://wepik.com/api/image/ai/"]');
@@ -71,28 +60,52 @@ function getFirstGenImgSrc() {
     return '';
 }
 
-function observeAndDownload() {
+async function observeAndDownload() {
     let firstSrc = getFirstGenImgSrc();
 
-    let interval = setInterval(() => {
-        let now = getFirstGenImgSrc();
+    return new Promise((res, rej) => {
+        let interval = setInterval(() => {
+            let current = getFirstGenImgSrc();
 
-        if (firstSrc !== now) {
-            clearInterval(interval);
-            wait(1).then(initDownloadAll).catch(console.error);
-        }
-    }, 500);
+            if (firstSrc !== current) {
+                clearInterval(interval);
+                wait(1, 'to get the download button loaded')
+                    .then(initDownloadAll)
+                    .then(() => res())
+                    .catch(err => rej(err));
+            }
+        }, 500);
+    });
 }
 
+async function startDownload(it = 2) {
+    let genBtn = getGenerateButton();
+
+    if (!genBtn) {
+        alert('Please refresh the page and try again!');
+    }
+
+    while (it > 0) {
+        genBtn.click();
+        // await wait(30);
+        await observeAndDownload();
+        it--;
+    }
+}
+
+window.startDownload = startDownload;
+
+// startDownload(2).then(console.log).catch(console.error);
+
 function onStart() {
-    startDownload(2).then(console.log).catch(console.error);
+    startDownload(3).then(console.log).catch(console.error);
 }
 
 window.onStart = onStart;
 
 function hasPrompt() {
     var textarea = document.querySelector('textarea');
-    
+
     if (textarea.value) {
         return true;
     }
@@ -107,6 +120,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         // onStart();
         // alert('Button clicked!');
         if (hasPrompt()) {
+            // let go = confirm('Please make sure you have enough credits to download the images.')
             return onStart();
         } else {
             alert('Please write the prompt first!');
