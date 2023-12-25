@@ -1,7 +1,7 @@
 {
     "manifest_version": 3,
     "name": "Freepik Bulk Downloader",
-    "version": "1.3",
+    "version": "1.5",
     "description": "Freepik Bulk Downloader",
     "author": "Md Abdullahil Shafi - shafi.cse.buet@gmail.com",
     "action": {
