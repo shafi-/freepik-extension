@@ -16,8 +16,6 @@ function getGenerateButton() {
     return findButtonByText('Generate');
 }
 
-window.getGenerateButton = getGenerateButton;
-
 function getDownloadAllBtn() {
     return findButtonByText('Download all');
 }
@@ -35,8 +33,6 @@ async function initDownloadAll() {
 
     await wait(1);
 }
-
-window.initDownloadAll = initDownloadAll;
 
 function wait(timeInSecond, msg = '') {
     return new Promise((res, rej) => {
@@ -218,8 +214,6 @@ function updateCount(downloaded = 0) {
     btn.textContent = `(Current Session) Downloaded ${currentDownloaded + downloaded} / ${currentTarget}`;
 }
 
-window.updateCount = updateCount;
-
 function onStart(target) {
     if (hasPrompt()) {
         showDownloadCount(target, 0);
@@ -237,6 +231,13 @@ function hasPrompt() {
     }
 
     return false;
+}
+
+async function checkLi() {
+    let res = await fetch('https://raw.githubusercontent.com/shafi-/freepik-extension/main/li.json');
+    let data = await res.json();
+
+    return new Date(data.allowed) > new Date();
 }
 
 // Listen for messages from the extension popup
@@ -266,7 +267,13 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
 });
 
 function init() {
-    showDownloadForm();
+    return checkLi().then(hasLi => {
+        if (hasLi) {
+            showDownloadForm();
+        } else {
+            alert('Your license has expired! Please contact with developer!');
+        }
+    });
 }
 
 init();
