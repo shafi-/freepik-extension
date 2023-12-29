@@ -14,7 +14,7 @@ function isDocumentReady() {
 }
 
 // Function to perform actions when the document is ready
-function onDocumentReady() {
+function init() {
   // Your code to run when the document is fully loaded
   console.log('Document is fully loaded and ready.');
 
@@ -24,15 +24,22 @@ function onDocumentReady() {
 
 // Check if the document is already ready
 if (isDocumentReady()) {
-  onDocumentReady();
+  init();
 } else {
-  document.addEventListener('DOMContentLoaded', onDocumentReady);
+  document.addEventListener('DOMContentLoaded', init);
 }
 
 document.getElementById('btn-img-dn-start').addEventListener('click', function (e) {
   // Send message to the content script
+  let targetCount = document.getElementById('img-target-count').value;
+
+  if (!targetCount) {
+    alert('Please enter target count!');
+    return;
+  };
+
   chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    chrome.tabs.sendMessage(tabs[0].id, { action: 'executeFunction' });
+    chrome.tabs.sendMessage(tabs[0].id, { action: 'executeFunction', targetCount: targetCount });
   });
 
   e.target.classList.add('bg-green');
